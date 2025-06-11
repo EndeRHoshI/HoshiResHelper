@@ -19,7 +19,7 @@ object Scanner {
                 // 是目标文件，添加
                 xmlFileList.add(file.path)
             } else {
-                // 无事发生
+                // 不是目标文件，不进行处理
             }
         }
     }
@@ -27,10 +27,10 @@ object Scanner {
     private fun isTargetFile(file: File): Boolean {
         val filePath = file.path
         val fileName = file.name
-        val notBuildFile = !filePath.contains("build") // 不能包含 build，避免扫描到生成的临时文件
-        val isResFile = filePath.contains("res") // 需要包含 res，其他都是无关的
-        val endsWithXml = fileName.endsWith(".xml") // 需要.xml 结尾
-        return notBuildFile && isResFile && endsWithXml
+        return !filePath.contains("build") // 不能包含 build，避免扫描到生成的临时文件
+                && filePath.contains("res") // 需要包含 res，其他都是无关的
+                && fileName.endsWith(".xml") // 需要.xml 结尾
+                && !filePath.contains("custom") // 不包含 custom 文件夹
                 && (fileName.startsWith("string") || fileName.startsWith("arrays")) // string 或者 arrays 文件
     }
 
