@@ -29,10 +29,14 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation("io.ktor:ktor-client-core:2.3.7")
+            implementation("io.ktor:ktor-client-cio:2.3.7") // 使用CIO引擎
+            implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
         }
     }
 }
-
 
 compose.desktop {
     application {
