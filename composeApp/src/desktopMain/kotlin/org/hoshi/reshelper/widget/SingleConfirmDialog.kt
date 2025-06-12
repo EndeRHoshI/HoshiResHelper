@@ -6,6 +6,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 
+/**
+ * 只有一个确认按钮的 Dialog
+ */
 @Composable
 private fun SingleConfirmDialog(
     onConfirmation: () -> Unit,

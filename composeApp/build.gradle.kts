@@ -30,10 +30,14 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation("io.ktor:ktor-client-core:2.3.7")
-            implementation("io.ktor:ktor-client-cio:2.3.7") // 使用CIO引擎
+            implementation("io.ktor:ktor-client-cio:2.3.7") // 使用 CIO 引擎
             implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+            // 处理 Excel 的依赖
+            implementation("org.apache.poi:poi:5.2.2")
+            implementation("org.apache.poi:poi-ooxml:5.2.2")
         }
     }
 }
