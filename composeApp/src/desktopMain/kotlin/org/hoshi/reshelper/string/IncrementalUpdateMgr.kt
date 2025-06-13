@@ -15,19 +15,19 @@ import kotlin.collections.forEach
  * xml 增量更新工具类
  *
  * 用法：
- * 传入两个 Xml，一个原 Xml，一个目标 Xml，读取原 Xml 里面的所有键值对，然后读取目标 Xml 里面的所有键值对，遍历目标 Xml 的键值对
- * 把原 Xml 中有对应 Key 的数据写入到原 Xml 中，如果原 Xml 中没有对应的 Key，则新增键值对，简单说就是覆盖更新原有的 Xml，然后输出到指定文件中
+ * 传入两个 xml，一个原 xml，一个目标 xml，读取原 xml 里面的所有键值对，然后读取目标 xml 里面的所有键值对，遍历目标 xml 的键值对
+ * 把原 xml 中有对应 Key 的数据写入到原 xml 中，如果原 xml 中没有对应的 Key，则新增键值对，简单说就是覆盖更新原有的 xml，然后输出到指定文件中
  *
  * 使用场景：
- * 有时候有新的翻译文件，但是这个文件你不知道和旧版本对比新增或减少了那些，顺序也是错乱的，这时候就可以把新旧的两个 Xml 文件导入，然后输出到另一个 Xml 文件中
- * 再把输出的 Xml 文件中的内容复制，粘贴到之前旧的 Xml 文件中即可
+ * 有时候有新的翻译文件，但是这个文件你不知道和旧版本对比新增或减少了那些，顺序也是错乱的，这时候就可以把新旧的两个 xml 文件导入，然后输出到另一个 xml 文件中
+ * 再把输出的 xml 文件中的内容复制，粘贴到之前旧的 xml 文件中即可
  *
  * Created by lv.qx on 2024/3/26
  */
 fun main() {
-    val originXmlPath = "D:\\res\\origin_strings.xml" // 在这里输入原 Xml 的路径
-    val targetXmlPath = "D:\\res\\target_strings.xml" // 在这里输入目标 Xml 的路径
-    val outputXmlPath = "D:\\res\\output_strings.xml" // 在这里输入输出的 Xml 的路径
+    val originXmlPath = "D:\\res\\origin_strings.xml" // 在这里输入原 xml 的路径
+    val targetXmlPath = "D:\\res\\target_strings.xml" // 在这里输入目标 xml 的路径
+    val outputXmlPath = "D:\\res\\output_strings.xml" // 在这里输入输出的 xml 的路径
 
     val originXmlFile = File(originXmlPath)
     val targetXmlFile = File(targetXmlPath)
@@ -44,7 +44,7 @@ fun main() {
 
     val outputList = mutableListOf<XmlString>()
 
-    // 第一次遍历，把旧 Xml 中的先加到列表里，同时把旧 Xml 中有，且新 Xml 中也有的，value 替换成 newValue 后，也放进列表里，
+    // 第一次遍历，把旧 xml 中的先加到列表里，同时把旧 xml 中有，且新 xml 中也有的，value 替换成 newValue 后，也放进列表里，
     originXmlStringList.forEach {
         val name = it.name
         if (targetXmlStringMap.keys.contains(name)) {
@@ -60,7 +60,7 @@ fun main() {
         }
     }
 
-    // 第二次遍历，把新 Xml 中有，而旧 Xml 中没有的放进列表里
+    // 第二次遍历，把新 xml 中有，而旧 xml 中没有的放进列表里
     targetXmlStringList.forEach {
         val name = it.name
         if (!originXmlStringNameList.contains(name)) {
@@ -69,7 +69,7 @@ fun main() {
         }
     }
 
-    // 输出 Xml
+    // 输出 xml
     // 构造 Document
     val doc = getXmlDocumentByFilePath()
     outputList.forEach {
@@ -93,7 +93,7 @@ fun main() {
         }
     }
 
-    println("共识别出 ${originXmlStringList.size} 个原 Xml 键值对，${targetXmlStringList.size} 个目标 Xml 键值对，将要输出 ${outputList.size} 个 Xml 键值对")
+    println("共识别出 ${originXmlStringList.size} 个原 xml 键值对，${targetXmlStringList.size} 个目标 xml 键值对，将要输出 ${outputList.size} 个 xml 键值对")
 }
 
 private fun getXmlStringList(file: File): List<XmlString> {

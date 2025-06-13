@@ -13,12 +13,12 @@ import javax.xml.parsers.DocumentBuilderFactory
 object StringUtils {
 
     /**
-     * 处理 Xml 文件，耗时方法，带一下 suspend
+     * 处理 xml 文件，耗时方法，带一下 suspend
      * @param folderPath 项目根目录或者单独某个 res 文件夹的路径
      * @param outputPath 导出为 Excel 的路径
      * @param outputFileName 导出的 Excel 的名称，不输入则默认用当前时间格式化作为名称
      */
-    suspend fun execute(folderPath: String, outputPath: String, outputFileName: String? = null): Boolean {
+    suspend fun execute(folderPath: String, outputPath: String, outputFileName: String? = null): String {
         val allStringFileList = mutableListOf<String>() // 在外部创建一个列表，遍历时把找到的 string.xml 文件路径放进去
         findAllStringFiles(folderPath, allStringFileList)
 
@@ -104,7 +104,11 @@ object StringUtils {
         }
 
         val sdf = SimpleDateFormat("yyyyMMddHHmmss")
-        val excelName = (outputFileName ?: sdf.format(Date())) + ".xlsx"
+        val excelName = if (outputFileName.isNullOrEmpty()) {
+            sdf.format(Date())
+        } else {
+            outputFileName
+        } + ".xlsx"
         val excelPath = "$outputPath/$excelName"
         val excelFile = File(excelPath)
         if (excelFile.exists()) {
@@ -116,7 +120,7 @@ object StringUtils {
             File(excelPath).createNewFile()
         }
         FileOutputStream(excelFile).use { excelBook.write(it) }
-        return true
+        return excelPath
     }
 
     /**
@@ -141,7 +145,7 @@ object StringUtils {
 
     private fun readStringFromXml(xmlFilePath: String?, folderName: String): List<XmlString> {
         if (xmlFilePath.isNullOrEmpty()) {
-            println("目标 Xml 路径为空，请检查")
+            println("目标 xml 路径为空，请检查")
             return listOf()
         }
         val xmlFile = File(xmlFilePath)
@@ -151,7 +155,7 @@ object StringUtils {
     private fun readStringFromXml(xmlFile: File?, folderName: String): List<XmlString> {
         val resultList = mutableListOf<XmlString>()
         if (xmlFile == null || !xmlFile.exists()) {
-            println("目标 Xml 文件为空或不存在，请检查")
+            println("目标 xml 文件为空或不存在，请检查")
             return resultList.toList()
         }
 

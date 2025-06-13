@@ -1,111 +1,74 @@
 package org.hoshi.reshelper
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import org.hoshi.reshelper.string.StringUtils
-import org.hoshi.reshelper.string.XmlString
-import org.hoshi.reshelper.utils.FileUtils
-import org.hoshi.reshelper.widget.SingleConfirmDialog
+import org.hoshi.reshelper.page.DrawableSimplifyPage
+import org.hoshi.reshelper.page.Router
+import org.hoshi.reshelper.page.StringExportAndImportPage
+import org.hoshi.reshelper.page.XmlIncrementalUpdatePage
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import java.awt.Desktop
-import java.io.File
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var folderPath by remember { mutableStateOf("") }
-        var outputPath by remember { mutableStateOf("") }
-        var outputFileName by remember { mutableStateOf(TextFieldValue()) }
-        var successTips by remember { mutableStateOf("") }
-        var loading by remember { mutableStateOf(false) }
-        val xmlFileList = mutableStateListOf<String>()
-        val xmlStringList = mutableStateListOf<XmlString>()
-        val openAlertDialog = remember { mutableStateOf<Pair<String, String>?>(null) }
+    var page by remember { mutableStateOf(Router.HOME) } // 当前页面
+    fun routeToHome() {
+        page = Router.HOME
+    } // 返回主页
 
-        Box(Modifier.fillMaxSize()) { // 外部相当于父布局的部分
-            Column(
-                // 相当于 LinearLayout
-                modifier = Modifier
-                    .safeContentPadding()
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+    when (page) {
+        Router.HOME -> {
+            val padding = 16.dp
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Button(onClick = {
-                    FileUtils.openDirectorySelector()?.path?.let { folderPath = it }
-                }) {
-                    Text("选择项目或 res 目录")
-                }
-                Text("项目或 res 目录为：$folderPath")
-                Button(onClick = {
-                    FileUtils.openDirectorySelector()?.path?.let { outputPath = it }
-                }) {
-                    Text("选择输出目录")
-                }
-                Text("输出目录为：$outputPath")
-                TextField(
-                    outputFileName,
-                    { outputFileName = it },
-                    label = { Text("导出文件名（可选，自带 .xlsx 后缀）") },
-                    singleLine = true
-                )
-                Button(onClick = {
-                    if (folderPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "项目或 res 目录为空，请选择后再继续")
-                    } else if (outputPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "输出目录为空，请选择后再继续")
-                    } else {
-                        loading = true
-                        MainScope().launch(Dispatchers.IO) {
-                            val result = StringUtils.execute(folderPath, outputPath, outputFileName.text)
-                            if (result) {
-                                loading = false
-                                successTips = "处理完成，文件生成于：${"$outputPath/${outputFileName.text}.xlsx"}"
-                            }
-                        }
+                Row {
+                    Button(
+                        shape = RoundedCornerShape(4.dp),
+                        onClick = { page = Router.STRING_EXPORT_AND_IMPORT },
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        Text("字符串导出导入")
                     }
-                }) {
-                    Text("开始处理")
-                }
-                Text(
-                    successTips,
-                    modifier = Modifier.clickable {
-                        if (successTips.isNotEmpty()) {
-                            Desktop.getDesktop().open(File("$outputPath/${outputFileName.text}.xlsx"))
-                        }
+                    Button(
+                        shape = RoundedCornerShape(4.dp),
+                        onClick = { page = Router.DRAWABLE_SIMPLIFY },
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        Text("图片处理")
                     }
-                )
-                // ScrollableLazyColumn(xmlFileList)
-                // ScrollableLazyColumn(xmlStringList)
-                SingleConfirmDialog(openAlertDialog)
-            }
-
-            if (loading) {
-                Box( // Loading 的背景
-                    Modifier.fillMaxSize()
-                        .background(Color(0x99333333))
-                        .clickable(false) {}, // 把点击事件去掉，不让点击下层
-                    contentAlignment = Alignment.Center // 使内部控件水平居中
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(64.dp),
-                        color = MaterialTheme.colorScheme.secondary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
+                    Button(
+                        shape = RoundedCornerShape(4.dp),
+                        onClick = { page = Router.XML_INCREMENTAL_UPDATE },
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        Text("xml 增量更新")
+                    }
+                    Button(
+                        shape = RoundedCornerShape(4.dp),
+                        onClick = { page = Router.XML_TRANSLATE },
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        Text("xml 翻译")
+                    }
                 }
             }
         }
+
+        Router.STRING_EXPORT_AND_IMPORT -> StringExportAndImportPage { routeToHome() }
+        Router.DRAWABLE_SIMPLIFY -> DrawableSimplifyPage { routeToHome() }
+        Router.XML_INCREMENTAL_UPDATE -> XmlIncrementalUpdatePage { routeToHome() }
+        Router.XML_TRANSLATE -> XmlIncrementalUpdatePage { routeToHome() }
     }
 }
 
