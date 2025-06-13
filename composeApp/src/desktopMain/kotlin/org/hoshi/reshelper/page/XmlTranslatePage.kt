@@ -10,24 +10,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import org.hoshi.reshelper.utils.IncrementalUpdateUtils
-import org.hoshi.reshelper.string.StringUtils
-import org.hoshi.reshelper.string.XmlString
 import org.hoshi.reshelper.utils.FileUtils
+import org.hoshi.reshelper.utils.TranslateUtils
 import org.hoshi.reshelper.widget.SingleConfirmDialog
 import java.awt.Desktop
 import java.io.File
 import javax.swing.JFileChooser
 
 @Composable
-fun XmlIncrementalUpdatePage(backAction: () -> Unit) {
+fun XmlTranslatePage(backAction: () -> Unit) {
     var originXmlPath by remember { mutableStateOf("") }
-    var targetXmlPath by remember { mutableStateOf("") }
     var outputXmlFolder by remember { mutableStateOf("") }
     var outputXmlName by remember { mutableStateOf<String?>(null) }
     var successTips by remember { mutableStateOf("") }
@@ -59,19 +55,9 @@ fun XmlIncrementalUpdatePage(backAction: () -> Unit) {
                         FileUtils.openDirectorySelector(JFileChooser.FILES_ONLY)?.path?.let { originXmlPath = it }
                     }
                 ) {
-                    Text("选择原 xml")
+                    Text("选择 xml")
                 }
-                Text("原 xml 路径为：$originXmlPath")
-                Button(
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.padding(top = 20.dp),
-                    onClick = {
-                        FileUtils.openDirectorySelector(JFileChooser.FILES_ONLY)?.path?.let { targetXmlPath = it }
-                    }
-                ) {
-                    Text("选择目标 xml")
-                }
-                Text("目标 xml 路径为：$targetXmlPath")
+                Text("xml 路径为：$originXmlPath")
                 Button(
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.padding(top = 20.dp),
@@ -112,17 +98,15 @@ fun XmlIncrementalUpdatePage(backAction: () -> Unit) {
                     modifier = Modifier.padding(top = 20.dp),
                     onClick = {
                         if (originXmlPath.isEmpty()) {
-                            openAlertDialog.value = Pair("提示", "原 xml 路径为空，请选择后再继续")
-                        } else if (targetXmlPath.isEmpty()) {
-                            openAlertDialog.value = Pair("提示", "目标 xml 路径为空，请选择后再继续")
+                            openAlertDialog.value = Pair("提示", "xml 路径为空，请选择后再继续")
                         } else if (outputXmlFolder.isEmpty()) {
                             openAlertDialog.value = Pair("提示", "输出目录为空，请选择后再继续")
                         } else {
                             loading = true
                             MainScope().launch(Dispatchers.IO) {
-                                val result = IncrementalUpdateUtils.execute(
+                                val result = TranslateUtils.execute(
                                     originXmlPath,
-                                    targetXmlPath,
+                                    "",
                                     outputXmlFolder,
                                     outputXmlName
                                 )

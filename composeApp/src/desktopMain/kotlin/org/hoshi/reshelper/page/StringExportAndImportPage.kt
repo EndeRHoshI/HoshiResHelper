@@ -84,10 +84,8 @@ fun StringExportAndImportPage(backAction: () -> Unit) {
 fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
     var folderPath by remember { mutableStateOf("") }
     var outputPath by remember { mutableStateOf("") }
-    var outputFileName by remember { mutableStateOf(TextFieldValue()) }
+    var outputFileName by remember { mutableStateOf<String?>(null) }
     var resultPath by remember { mutableStateOf("") }
-    val xmlFileList = mutableStateListOf<String>()
-    val xmlStringList = mutableStateListOf<XmlString>()
     val openAlertDialog = remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Box(
@@ -123,7 +121,7 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
             Text("输出目录为：$outputPath")
             Text("导出文件名（可选，自带 .xlsx 后缀）", modifier = Modifier.padding(top = 20.dp))
             BasicTextField(
-                value = outputFileName,
+                value = outputFileName.orEmpty(),
                 onValueChange = { outputFileName = it },
                 modifier = Modifier
                     .padding(top = 10.dp, start = 30.dp, end = 30.dp)
@@ -154,7 +152,7 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
                     } else {
                         showLoading.invoke()
                         MainScope().launch(Dispatchers.IO) {
-                            resultPath = StringUtils.execute(folderPath, outputPath, outputFileName.text)
+                            resultPath = StringUtils.execute(folderPath, outputPath, outputFileName)
                             hideLoading.invoke()
                         }
                     }
@@ -182,7 +180,7 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
 fun ImportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
     var xlsxPath by remember { mutableStateOf("") }
     var outputPath by remember { mutableStateOf("") }
-    var successTips by remember { mutableStateOf("") }
+    var resultPath by remember { mutableStateOf("") }
     val openAlertDialog = remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Box(
@@ -227,18 +225,17 @@ fun ImportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
                     } else {
                         showLoading.invoke()
                         MainScope().launch(Dispatchers.IO) {
-                            val result = StringUtils.execute(xlsxPath, outputPath)
+                            resultPath = StringUtils.execute(xlsxPath, outputPath)
                             hideLoading.invoke()
-                            successTips = "处理完成，文件生成于：${outputPath}"
                         }
                     }
                 }) {
                 Text("开始处理")
             }
             Text(
-                successTips,
+                if (resultPath.isEmpty()) "" else "处理完成，文件生成于：$resultPath",
                 modifier = Modifier.clickable {
-                    if (successTips.isNotEmpty()) {
+                    if (resultPath.isNotEmpty()) {
                         Desktop.getDesktop().open(File(outputPath))
                     }
                 }

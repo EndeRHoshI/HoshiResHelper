@@ -57,7 +57,7 @@ fun DrawableSimplifyPage(backAction: () -> Unit) {
                     }
                     Text("res 目录为：$folderPath")
                     Text(
-                        "注意开始处理之后，会删除 res 内多余的图片文件，请确保有做版本管理，或者先做好备份",
+                        "注意开始处理之后，会删除指定的 res 路径内的多余图片文件，请确保有做版本管理，或者先做好备份",
                         modifier = Modifier.padding(top = 20.dp)
                     )
                     Button(
@@ -83,8 +83,6 @@ fun DrawableSimplifyPage(backAction: () -> Unit) {
                         Text("开始处理")
                     }
                     Text(successTips)
-                    // ScrollableLazyColumn(xmlFileList)
-                    // ScrollableLazyColumn(xmlStringList)
                     SingleConfirmDialog(openAlertDialog)
                 }
             }

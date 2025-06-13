@@ -15,6 +15,7 @@ import org.hoshi.reshelper.page.DrawableSimplifyPage
 import org.hoshi.reshelper.page.Router
 import org.hoshi.reshelper.page.StringExportAndImportPage
 import org.hoshi.reshelper.page.XmlIncrementalUpdatePage
+import org.hoshi.reshelper.page.XmlTranslatePage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -68,7 +69,7 @@ fun App() {
         Router.STRING_EXPORT_AND_IMPORT -> StringExportAndImportPage { routeToHome() }
         Router.DRAWABLE_SIMPLIFY -> DrawableSimplifyPage { routeToHome() }
         Router.XML_INCREMENTAL_UPDATE -> XmlIncrementalUpdatePage { routeToHome() }
-        Router.XML_TRANSLATE -> XmlIncrementalUpdatePage { routeToHome() }
+        Router.XML_TRANSLATE -> XmlTranslatePage { routeToHome() }
     }
 }
 
