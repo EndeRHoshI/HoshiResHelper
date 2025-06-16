@@ -1,6 +1,5 @@
-package org.hoshi.reshelper.drawable
+package org.hoshi.reshelper.utils
 
-import kotlinx.coroutines.delay
 import java.io.File
 import java.util.regex.Pattern
 

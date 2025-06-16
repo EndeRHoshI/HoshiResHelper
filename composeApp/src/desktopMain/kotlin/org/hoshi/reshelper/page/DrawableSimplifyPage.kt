@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import org.hoshi.reshelper.drawable.DrawableUtils
+import org.hoshi.reshelper.utils.DrawableUtils
 import org.hoshi.reshelper.utils.FileUtils
 import org.hoshi.reshelper.widget.SingleConfirmDialog
 import javax.swing.JFileChooser

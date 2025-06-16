@@ -1,6 +1,6 @@
 package org.hoshi.reshelper.utils
 
-import org.hoshi.reshelper.string.XmlString
+import org.hoshi.reshelper.data.XmlString
 import org.w3c.dom.Document
 import java.io.File
 import java.io.FileOutputStream

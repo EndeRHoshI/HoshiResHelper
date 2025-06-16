@@ -10,14 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import org.hoshi.reshelper.string.StringUtils
-import org.hoshi.reshelper.string.XmlString
+import org.hoshi.reshelper.utils.StringUtils
 import org.hoshi.reshelper.utils.FileUtils
 import org.hoshi.reshelper.widget.SingleConfirmDialog
 import java.awt.Desktop
@@ -83,9 +81,9 @@ fun StringExportAndImportPage(backAction: () -> Unit) {
 @Composable
 fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
     var folderPath by remember { mutableStateOf("") }
-    var outputPath by remember { mutableStateOf("") }
+    var outputFolder by remember { mutableStateOf("") }
     var outputFileName by remember { mutableStateOf<String?>(null) }
-    var resultPath by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf(Pair(false, "")) } // 处理结果
     val openAlertDialog = remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Box(
@@ -112,13 +110,13 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
             Button(
                 shape = RoundedCornerShape(4.dp),
                 onClick = {
-                    FileUtils.openDirectorySelector(JFileChooser.DIRECTORIES_ONLY)?.path?.let { outputPath = it }
+                    FileUtils.openDirectorySelector(JFileChooser.DIRECTORIES_ONLY)?.path?.let { outputFolder = it }
                 },
                 modifier = Modifier.padding(top = 20.dp)
             ) {
                 Text("选择输出目录")
             }
-            Text("输出目录为：$outputPath")
+            Text("输出目录为：$outputFolder")
             Text("导出文件名（可选，自带 .xlsx 后缀）", modifier = Modifier.padding(top = 20.dp))
             BasicTextField(
                 value = outputFileName.orEmpty(),
@@ -145,16 +143,15 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
             Button(
                 shape = RoundedCornerShape(4.dp),
                 onClick = {
-                    if (folderPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "项目或 res 目录为空，请选择后再继续")
-                    } else if (outputPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "输出目录为空，请选择后再继续")
-                    } else {
-                        showLoading.invoke()
-                        MainScope().launch(Dispatchers.IO) {
-                            resultPath = StringUtils.execute(folderPath, outputPath, outputFileName)
-                            hideLoading.invoke()
+                    showLoading.invoke()
+                    MainScope().launch(Dispatchers.IO) {
+                        result = StringUtils.xml2Xlsx(folderPath, outputFolder, outputFileName)
+                        val isSuccess = result.first
+                        val content = result.second
+                        if (!isSuccess) { // 如果失败了，content 就是错误信息
+                            openAlertDialog.value = Pair("提示", content)
                         }
+                        hideLoading.invoke()
                     }
                 },
                 modifier = Modifier.padding(top = 20.dp)
@@ -162,15 +159,13 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
                 Text("开始处理")
             }
             Text(
-                if (resultPath.isEmpty()) "" else "处理完成，文件生成于：$resultPath",
+                if (result.first) "处理完成，文件生成于：${result.second}" else "",
                 modifier = Modifier.clickable {
-                    if (resultPath.isNotEmpty()) {
-                        Desktop.getDesktop().open(File(resultPath))
+                    if (result.first) {
+                        Desktop.getDesktop().open(File(result.second))
                     }
                 }
             )
-            // ScrollableLazyColumn(xmlFileList)
-            // ScrollableLazyColumn(xmlStringList)
             SingleConfirmDialog(openAlertDialog)
         }
     }
@@ -179,8 +174,8 @@ fun ExportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
 @Composable
 fun ImportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
     var xlsxPath by remember { mutableStateOf("") }
-    var outputPath by remember { mutableStateOf("") }
-    var resultPath by remember { mutableStateOf("") }
+    var outputFolder by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf(Pair(false, "")) }
     val openAlertDialog = remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Box(
@@ -207,36 +202,33 @@ fun ImportView(showLoading: () -> Unit, hideLoading: () -> Unit) {
                 modifier = Modifier.padding(top = 20.dp),
                 shape = RoundedCornerShape(4.dp),
                 onClick = {
-                    FileUtils.openDirectorySelector(JFileChooser.FILES_ONLY)?.path?.let { outputPath = it }
+                    FileUtils.openDirectorySelector(JFileChooser.DIRECTORIES_ONLY)?.path?.let { outputFolder = it }
                 }) {
                 Text("选择输出目录")
             }
-            Text("输出目录为：$outputPath")
+            Text("输出目录为：$outputFolder")
             Button(
                 shape = RoundedCornerShape(4.dp),
                 modifier = Modifier.padding(top = 20.dp),
                 onClick = {
-                    if (xlsxPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "xlsx 文件路径为空，请选择后再继续")
-                    } else if (!xlsxPath.endsWith(".xlsx")) {
-                        openAlertDialog.value = Pair("提示", "未选择正确的 xlsx 文件，请重新选择")
-                    } else if (outputPath.isEmpty()) {
-                        openAlertDialog.value = Pair("提示", "输出目录为空，请选择后再继续")
-                    } else {
-                        showLoading.invoke()
-                        MainScope().launch(Dispatchers.IO) {
-                            resultPath = StringUtils.execute(xlsxPath, outputPath)
-                            hideLoading.invoke()
+                    showLoading.invoke()
+                    MainScope().launch(Dispatchers.IO) {
+                        result = StringUtils.xlsx2Xml(xlsxPath, outputFolder)
+                        val isSuccess = result.first
+                        val content = result.second
+                        if (!isSuccess) { // 如果失败了，content 就是错误信息
+                            openAlertDialog.value = Pair("提示", content)
                         }
+                        hideLoading.invoke()
                     }
                 }) {
                 Text("开始处理")
             }
             Text(
-                if (resultPath.isEmpty()) "" else "处理完成，文件生成于：$resultPath",
+                if (result.first) "处理完成，文件生成于：${result.second}" else "",
                 modifier = Modifier.clickable {
-                    if (resultPath.isNotEmpty()) {
-                        Desktop.getDesktop().open(File(outputPath))
+                    if (result.first) {
+                        Desktop.getDesktop().open(File(result.second))
                     }
                 }
             )

@@ -1,4 +1,4 @@
-package org.hoshi.reshelper.string
+package org.hoshi.reshelper.data
 
 /**
  * xml 文件中，每一个字符串键值对对应的实体类

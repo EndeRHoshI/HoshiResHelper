@@ -10,14 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.hoshi.reshelper.utils.IncrementalUpdateUtils
-import org.hoshi.reshelper.string.StringUtils
-import org.hoshi.reshelper.string.XmlString
 import org.hoshi.reshelper.utils.FileUtils
 import org.hoshi.reshelper.widget.SingleConfirmDialog
 import java.awt.Desktop
