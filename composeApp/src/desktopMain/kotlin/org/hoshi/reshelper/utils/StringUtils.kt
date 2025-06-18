@@ -227,7 +227,13 @@ object StringUtils {
         val sdf = SimpleDateFormat("yyyyMMddHHmmss")
         val resultFolder = "$outputFolder/Output_${sdf.format(Date())}"
         File(resultFolder).mkdirs()
-        // 读取页签，创建
+        // 读取页签，根据页签来创建不同文件夹，表示不同的项目、模块
+
+        // 读取每个页签内的内容
+        // 读取第 1 列，创建对应的 xml 文件
+        // 读取第 2 列，取得字符串的 key
+        // 读取 3...n 列，也就是 values 列，取得字符串的 value
+        // 往对应 xml 文件中写入键值对
 
         return Pair(true, resultFolder)
     }
