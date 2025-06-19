@@ -72,6 +72,3 @@ fun App() {
         Router.XML_TRANSLATE -> XmlTranslatePage { routeToHome() }
     }
 }
-
-
-
