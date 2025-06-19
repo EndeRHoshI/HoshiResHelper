@@ -58,7 +58,31 @@ fun XmlIncrementalUpdatePage(backAction: () -> Unit) {
                 ) {
                     Text("选择原 xml")
                 }
-                Text("原 xml 路径为：$originXmlPath")
+
+                Text("原 xml 路径为")
+                BasicTextField(
+                    value = originXmlPath,
+                    onValueChange = { originXmlPath = it },
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 130.dp, end = 130.dp)
+                        .background(Color.White, RoundedCornerShape(4.dp))
+                        .height(35.dp)
+                        .fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                innerTextField()
+                            }
+                        }
+                    }
+                )
+
                 Button(
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.padding(top = 20.dp),
@@ -68,7 +92,29 @@ fun XmlIncrementalUpdatePage(backAction: () -> Unit) {
                 ) {
                     Text("选择目标 xml")
                 }
-                Text("目标 xml 路径为：$targetXmlPath")
+                Text("目标 xml 路径为")
+                BasicTextField(
+                    value = targetXmlPath,
+                    onValueChange = { targetXmlPath = it },
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 130.dp, end = 130.dp)
+                        .background(Color.White, RoundedCornerShape(4.dp))
+                        .height(35.dp)
+                        .fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                innerTextField()
+                            }
+                        }
+                    }
+                )
                 Button(
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.padding(top = 20.dp),
