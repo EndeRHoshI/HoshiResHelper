@@ -8,7 +8,7 @@ import androidx.compose.ui.window.rememberWindowState
 fun main() = application {
     val state = rememberWindowState(width = 800.dp, height = 600.dp)
     Window(
-        title = "HoshiResHelper",
+        title = "ResHelper",
         onCloseRequest = ::exitApplication,
         state = state,
         resizable = false,
