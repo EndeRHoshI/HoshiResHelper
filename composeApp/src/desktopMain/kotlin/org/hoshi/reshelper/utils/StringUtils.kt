@@ -32,21 +32,22 @@ object StringUtils {
         if (outputFolder.isEmpty()) {
             return Pair(false, "输出目录为空，请选择后再继续")
         }
+        LogMgr.clear() // 首先清空下日志管理器里面的 sb
         val allStringFileList = mutableListOf<String>() // 在外部创建一个列表，遍历时把找到的 string.xml 文件路径放进去
         findAllStringFiles(folderPath, allStringFileList)
 
-        println("共找到 " + allStringFileList.size + " 个 string.xml/arrays.xml 文件")
+        LogMgr.printlnLog("共找到 " + allStringFileList.size + " 个 string.xml/arrays.xml 文件")
 
         // 去掉前方统一的父目录，然后截掉 res 后一致的部分，得到不一致的部分来进行一下分组
         // 组数对应生成的 Excel 文件的工作表数，组名对应 Excel 工作表名
         val resPathMap = allStringFileList.groupBy { it.substringAfter(folderPath).substringBefore("/res") }
-        println("共有 " + resPathMap.size + " 组")
+        LogMgr.printlnLog("共有 " + resPathMap.size + " 组")
 
         val excelBook = XSSFWorkbook()
         resPathMap.forEach {
             val folderName = it.key // 取得 folderName，就是组名或者说工作表名
             val resPathList = it.value
-            // println(folderName)
+            LogMgr.printlnLog(folderName, false)
 
             // 创建工作表
             val sheet = excelBook.createSheet(
@@ -59,10 +60,12 @@ object StringUtils {
             val lanCellMap = mutableMapOf<String, Int>() // 语言和列下标的映射
 
             var row = sheet.createRow(rowIndex++)
-            lanCellMap["fileName"] = cellIndex // 存储 fileName 列和列下标的映射
+            lanCellMap["fileName"] = 0 // 存储 fileName 列和列下标的映射
+            LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 fileName", false)
             row.createCell(cellIndex++).setCellValue("fileName")
 
             lanCellMap["name"] = cellIndex // 存储 name 列和列下标的映射
+            LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 name", false)
             row.createCell(cellIndex++).setCellValue("name")
 
             val allXmlStringList = resPathList.flatMap { xmlPath -> readStringFromXml(xmlPath, folderName) }
@@ -74,41 +77,52 @@ object StringUtils {
                     return@forEach // 如果已经有这一列了，跳过
                 }
                 lanCellMap[valueFolderName] = cellIndex // 存储语言和列的映射
+                LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 $valueFolderName", false)
                 row.createCell(cellIndex++).setCellValue(valueFolderName)
             }
 
             val baseCellName = "values"
             if (valueFolderMap.containsKey(baseCellName)) {
-                // 如果有基准列才继续处理，否则是不合法的，不用管了
+                // 如果有 values 文件夹才继续处理，否则是不合法的多语言翻译，不用管了
                 val baseList = valueFolderMap[baseCellName] // 取得基准列的各个项，后面用来给其它列找下标
                 if (baseList != null) {
+                    val baseNameList = baseList.map { xmlString -> xmlString.name } // 基准列里面的 name 列表，用来过滤掉基准列里面不存在但是在其他列存在的字符串
                     valueFolderMap.forEach { mapEntry ->
-                        val valueFolderName = mapEntry.key
-                        val xmlStringList = mapEntry.value
+                        val valueFolderName = mapEntry.key // value 文件夹名，形如 values-es-rES、values-zh-rTW
+                        val xmlStringList = mapEntry.value // 对应的 Xml 字符串列表
                         rowIndex = 1 // 将行数重置回 1
                         xmlStringList.forEach { xmlString ->
-                            // 如果是基准列，需要从头到尾进行填入内容
-                            if (valueFolderName != baseCellName) {
-                                // 如果不是基准列，需要找到对应的行来填入内容
-                                rowIndex =
-                                    baseList.indexOfFirst { baseXmlString -> xmlString.name == baseXmlString.name } + 1
-                            }
-                            if (rowIndex < 0) {
-                                return@forEach
-                            }
-                            row = sheet.getRow(rowIndex)
-                            if (row == null) {
-                                row = sheet.createRow(rowIndex)
-                            }
-                            if (valueFolderName == baseCellName) {
-                                rowIndex++
-                            }
-                            row.createCell(0).setCellValue(xmlString.fileName)
-                            row.createCell(1).setCellValue(xmlString.name)
+                            if (baseNameList.contains(xmlString.name)) {
+                                // 如果有基准列里面有才继续处理，否则是不需要翻译，或者是基准列里面不存在但是在其他列存在的字符串，不需要的
+                                // 如果是基准列，需要从头到尾进行填入内容
+                                if (valueFolderName != baseCellName) {
+                                    // 如果不是基准列，需要找到对应的行来填入内容
+                                    rowIndex =
+                                        baseList.indexOfFirst { baseXmlString -> xmlString.name == baseXmlString.name } + 1
+                                }
+                                if (rowIndex < 0) {
+                                    return@forEach
+                                }
+                                row = sheet.getRow(rowIndex)
+                                if (row == null) {
+                                    row = sheet.createRow(rowIndex)
+                                }
+                                if (valueFolderName == baseCellName) {
+                                    rowIndex++
+                                }
+                                val fileName = xmlString.fileName
+                                val name = xmlString.name
+                                LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 $fileName", false)
+                                row.createCell(0).setCellValue(fileName)
+                                LogMgr.printlnLog("在第 $rowIndex 行 1 列写入 $name", false)
+                                row.createCell(1).setCellValue(name)
 
-                            val textCellIndex = lanCellMap[valueFolderName]
-                            if (textCellIndex != null) {
-                                row.createCell(textCellIndex).setCellValue(xmlString.text)
+                                val textCellIndex = lanCellMap[valueFolderName]
+                                if (textCellIndex != null) {
+                                    val text = xmlString.text
+                                    LogMgr.printlnLog("在第 $rowIndex 行 $textCellIndex 列写入 $text", false)
+                                    row.createCell(textCellIndex).setCellValue(text)
+                                }
                             }
                         }
                     }
@@ -133,6 +147,11 @@ object StringUtils {
             File(excelPath).createNewFile()
         }
         FileOutputStream(excelFile).use { excelBook.write(it) }
+
+        // 输出一下日志
+        val logName = excelName.replace(".xlsx", "_log.txt")
+        LogMgr.writeTxt("$outputFolder/$logName")
+
         return Pair(true, excelPath)
     }
 
@@ -148,8 +167,9 @@ object StringUtils {
                 // 文件路径规则：在 values 目录下，包括 values-xxx 目录
                 if (isTargetFile(it)) {
                     // 文件名和文件路径匹配成功，添加到列表中
-                    println(it.absolutePath)
-                    allStringFileList.add(it.absolutePath)
+                    val absolutePath = it.absolutePath
+                    LogMgr.printlnLog("匹配成功，添加 $absolutePath",false)
+                    allStringFileList.add(absolutePath)
                 }
             }
         }
@@ -158,7 +178,7 @@ object StringUtils {
 
     private fun readStringFromXml(xmlFilePath: String?, folderName: String): List<XmlString> {
         if (xmlFilePath.isNullOrEmpty()) {
-            println("目标 xml 路径为空，请检查")
+            LogMgr.printlnLog("目标 xml 路径为空，请检查")
             return listOf()
         }
         val xmlFile = File(xmlFilePath)
@@ -168,7 +188,7 @@ object StringUtils {
     private fun readStringFromXml(xmlFile: File?, folderName: String): List<XmlString> {
         val resultList = mutableListOf<XmlString>()
         if (xmlFile == null || !xmlFile.exists()) {
-            println("目标 xml 文件为空或不存在，请检查")
+            LogMgr.printlnLog("目标 xml 文件为空或不存在，请检查")
             return resultList.toList()
         }
 
