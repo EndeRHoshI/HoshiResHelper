@@ -4,9 +4,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.hoshi.reshelper.data.XmlString
 import java.io.File
 import java.io.FileOutputStream
+import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.OutputKeys
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 
 /**
  * 字符串处理工具
@@ -36,18 +41,18 @@ object StringUtils {
         val allStringFileList = mutableListOf<String>() // 在外部创建一个列表，遍历时把找到的 string.xml 文件路径放进去
         findAllStringFiles(folderPath, allStringFileList)
 
-        LogMgr.printlnLog("共找到 " + allStringFileList.size + " 个 string.xml/arrays.xml 文件")
+        LogMgr.printlnLog("共找到 " + allStringFileList.size + " 个 string.xml/arrays.xml 文件", true)
 
         // 去掉前方统一的父目录，然后截掉 res 后一致的部分，得到不一致的部分来进行一下分组
         // 组数对应生成的 Excel 文件的工作表数，组名对应 Excel 工作表名
         val resPathMap = allStringFileList.groupBy { it.substringAfter(folderPath).substringBefore("/res") }
-        LogMgr.printlnLog("共有 " + resPathMap.size + " 组")
+        LogMgr.printlnLog("共有 " + resPathMap.size + " 组", true)
 
         val excelBook = XSSFWorkbook()
         resPathMap.forEach {
             val folderName = it.key // 取得 folderName，就是组名或者说工作表名
             val resPathList = it.value
-            LogMgr.printlnLog(folderName, false)
+            LogMgr.printlnLog(folderName)
 
             // 创建工作表
             val sheet = excelBook.createSheet(
@@ -61,11 +66,11 @@ object StringUtils {
 
             var row = sheet.createRow(rowIndex++)
             lanCellMap["fileName"] = 0 // 存储 fileName 列和列下标的映射
-            LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 fileName", false)
+            LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 fileName")
             row.createCell(cellIndex++).setCellValue("fileName")
 
             lanCellMap["name"] = cellIndex // 存储 name 列和列下标的映射
-            LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 name", false)
+            LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 name")
             row.createCell(cellIndex++).setCellValue("name")
 
             val allXmlStringList = resPathList.flatMap { xmlPath -> readStringFromXml(xmlPath, folderName) }
@@ -77,7 +82,7 @@ object StringUtils {
                     return@forEach // 如果已经有这一列了，跳过
                 }
                 lanCellMap[valueFolderName] = cellIndex // 存储语言和列的映射
-                LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 $valueFolderName", false)
+                LogMgr.printlnLog("在第 $rowIndex 行 $cellIndex 列写入 $valueFolderName")
                 row.createCell(cellIndex++).setCellValue(valueFolderName)
             }
 
@@ -86,7 +91,8 @@ object StringUtils {
                 // 如果有 values 文件夹才继续处理，否则是不合法的多语言翻译，不用管了
                 val baseList = valueFolderMap[baseCellName] // 取得基准列的各个项，后面用来给其它列找下标
                 if (baseList != null) {
-                    val baseNameList = baseList.map { xmlString -> xmlString.name } // 基准列里面的 name 列表，用来过滤掉基准列里面不存在但是在其他列存在的字符串
+                    val baseNameList =
+                        baseList.map { xmlString -> xmlString.name } // 基准列里面的 name 列表，用来过滤掉基准列里面不存在但是在其他列存在的字符串
                     valueFolderMap.forEach { mapEntry ->
                         val valueFolderName = mapEntry.key // value 文件夹名，形如 values-es-rES、values-zh-rTW
                         val xmlStringList = mapEntry.value // 对应的 Xml 字符串列表
@@ -112,15 +118,15 @@ object StringUtils {
                                 }
                                 val fileName = xmlString.fileName
                                 val name = xmlString.name
-                                LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 $fileName", false)
+                                LogMgr.printlnLog("在第 $rowIndex 行 0 列写入 $fileName")
                                 row.createCell(0).setCellValue(fileName)
-                                LogMgr.printlnLog("在第 $rowIndex 行 1 列写入 $name", false)
+                                LogMgr.printlnLog("在第 $rowIndex 行 1 列写入 $name")
                                 row.createCell(1).setCellValue(name)
 
                                 val textCellIndex = lanCellMap[valueFolderName]
                                 if (textCellIndex != null) {
                                     val text = xmlString.text
-                                    LogMgr.printlnLog("在第 $rowIndex 行 $textCellIndex 列写入 $text", false)
+                                    LogMgr.printlnLog("在第 $rowIndex 行 $textCellIndex 列写入 $text")
                                     row.createCell(textCellIndex).setCellValue(text)
                                 }
                             }
@@ -168,7 +174,7 @@ object StringUtils {
                 if (isTargetFile(it)) {
                     // 文件名和文件路径匹配成功，添加到列表中
                     val absolutePath = it.absolutePath
-                    LogMgr.printlnLog("匹配成功，添加 $absolutePath",false)
+                    LogMgr.printlnLog("匹配成功，添加 $absolutePath")
                     allStringFileList.add(absolutePath)
                 }
             }
@@ -178,7 +184,7 @@ object StringUtils {
 
     private fun readStringFromXml(xmlFilePath: String?, folderName: String): List<XmlString> {
         if (xmlFilePath.isNullOrEmpty()) {
-            LogMgr.printlnLog("目标 xml 路径为空，请检查")
+            LogMgr.printlnLog("目标 xml 路径为空，请检查", true)
             return listOf()
         }
         val xmlFile = File(xmlFilePath)
@@ -188,7 +194,7 @@ object StringUtils {
     private fun readStringFromXml(xmlFile: File?, folderName: String): List<XmlString> {
         val resultList = mutableListOf<XmlString>()
         if (xmlFile == null || !xmlFile.exists()) {
-            LogMgr.printlnLog("目标 xml 文件为空或不存在，请检查")
+            LogMgr.printlnLog("目标 xml 文件为空或不存在，请检查", true)
             return resultList.toList()
         }
 
@@ -243,17 +249,111 @@ object StringUtils {
         if (outputFolder.isEmpty()) {
             return Pair(false, "输出目录为空，请选择后再继续")
         }
-        // 创建一个文件夹
+
+        // 创建一个总的输出文件夹
         val sdf = SimpleDateFormat("yyyyMMddHHmmss")
         val resultFolder = "$outputFolder/Output_${sdf.format(Date())}"
         File(resultFolder).mkdirs()
-        // 读取页签，根据页签来创建不同文件夹，表示不同的项目、模块
 
-        // 读取每个页签内的内容
-        // 读取第 1 列，创建对应的 xml 文件
-        // 读取第 2 列，取得字符串的 key
-        // 读取 3...n 列，也就是 values 列，取得字符串的 value
-        // 往对应 xml 文件中写入键值对
+        LogMgr.clear() // 首先清空下日志管理器里面的 sb
+        val allXmlStringList = mutableListOf<XmlString>()
+
+        val workbook = XSSFWorkbook(File(xlsxPath))
+        workbook.sheetIterator().forEach { sheet -> // 读取每个页签内的内容，根据页签来创建不同文件夹，表示不同的项目、模块
+            val folderName = sheet.sheetName // 取得文件夹名（页签名、工作表名）
+            val cellDesList = mutableListOf<String>() // 列描述列表
+            var rowIndex = 0 // 行
+            sheet.rowIterator().forEach { row ->
+                var cellIndex = 0 // 列
+                var fileName = ""
+                var name = ""
+                var text = ""
+                row.cellIterator().forEach { cell ->
+                    if (rowIndex == 0) {
+                        // 第 0 行是列的描述，将符合 fileName、name、和 values、values-xxx 之类的项读入列描述列表中
+                        val stringCellValue = cell.stringCellValue
+                        cellDesList.add(stringCellValue)
+                    } else {
+                        // 其他行是实际的字符串数据
+                        // 通过列号取得对应的列描述，也就是 values、value-zh-rCN 这种
+                        val valueFolderName = cellDesList.getOrNull(cellIndex).orEmpty()
+                        when (cellIndex) {
+                            0 -> fileName = cell.stringCellValue // 第 0 列，是 fileName 列，取得文件名
+                            1 -> name = cell.stringCellValue // 第 1 列，是 name 列，取得 key
+                            else -> {
+                                // 其他列，是不同语种下的 value
+                                text = cell.stringCellValue
+                                // 创建对应的 XmlString 对象并加入到列表中
+                                val xmlString = XmlString(folderName, fileName, valueFolderName, name, text)
+                                allXmlStringList.add(xmlString)
+                                LogMgr.printlnLog("读取 $rowIndex 行 $cellIndex 列加入列表中，$xmlString")
+                            }
+                        }
+                    }
+                    cellIndex++
+                }
+                rowIndex++
+            }
+        }
+        LogMgr.printlnLog("共有 ${allXmlStringList.size} 个数据")
+
+        val groupByFolderNameMap = allXmlStringList.groupBy { it.folderName }
+        groupByFolderNameMap.forEach { folderNameEntry ->
+            val folderName = folderNameEntry.key
+            val xmlStringList = folderNameEntry.value
+            val sheetFolderPath = "$resultFolder/$folderName"
+            File(sheetFolderPath).mkdirs() // 创建对应的页签文件夹
+
+            val groupByValueFolderNameMap = xmlStringList.groupBy { it.valueFolderName }
+            groupByValueFolderNameMap.forEach { valueFolderNameEntry ->
+                val valueFolderName = valueFolderNameEntry.key
+                val xmlStringList = valueFolderNameEntry.value
+                val valueFolderPath = "$sheetFolderPath/$valueFolderName"
+                File(valueFolderPath).mkdirs() // 创建对应的语种文件夹
+
+                val groupByFileNameMap = xmlStringList.groupBy { it.fileName }
+                groupByFileNameMap.forEach { fileNameEntry ->
+                    val fileName = fileNameEntry.key
+                    val xmlStringList = fileNameEntry.value
+                    val xmlPath = "$valueFolderPath/$fileName"
+                    val xmlFile = File(xmlPath)
+                    xmlFile.createNewFile() // 创建 xml 文件
+
+                    // 获取 doc 对象
+                    val factory = DocumentBuilderFactory.newInstance()
+                    val builder = factory.newDocumentBuilder()
+                    val doc = builder.newDocument();
+
+                    // doc 中添加生成 root 节点
+                    val root = doc.createElement("resources")
+                    doc.appendChild(root)
+
+                    xmlStringList.forEach {
+                        val element = doc.createElement("string")
+                        element.setAttribute("name", it.name) // 添加 name 属性，即 key
+                        element.textContent = it.getText(true) // 填充 value 内容
+                        doc.documentElement.appendChild(element) // 将节点放到 root 节点下面
+                    }
+                    val source = DOMSource(doc)
+
+                    val transformer = TransformerFactory.newInstance().newTransformer().apply {
+                        setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4") // 未知，后续查下是干嘛的
+                        setOutputProperty(OutputKeys.ENCODING, "UTF-8") // 编码
+                        setOutputProperty(OutputKeys.INDENT, "yes") // 设置文档的换行与缩进
+                    }
+
+                    FileOutputStream(xmlFile).use { fos ->
+                        PrintWriter(fos).use { pw ->
+                            val result = StreamResult(pw)
+                            transformer.transform(source, result)
+                        }
+                    }
+                }
+            }
+        }
+
+        val logPath = "$resultFolder/log.txt"
+        LogMgr.writeTxt(logPath)
 
         return Pair(true, resultFolder)
     }

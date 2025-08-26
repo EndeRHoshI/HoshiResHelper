@@ -14,7 +14,7 @@ object LogMgr {
         sb.clear()
     }
 
-    fun printlnLog(content: String, needPrintln: Boolean = true) {
+    fun printlnLog(content: String, needPrintln: Boolean = false) {
         if (needPrintln) {
             println(content)
         }
